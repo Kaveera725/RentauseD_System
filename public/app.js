@@ -3,6 +3,9 @@ const itemList = document.getElementById("itemList");
 const bookingList = document.getElementById("bookingList");
 const notificationList = document.getElementById("notificationList");
 const ownerDashboard = document.getElementById("ownerDashboard");
+const calendarTitle = document.getElementById("calendarTitle");
+const calendarGrid = document.getElementById("calendarGrid");
+const calendarList = document.getElementById("calendarList");
 const adminItems = document.getElementById("adminItems");
 const adminBookings = document.getElementById("adminBookings");
 const adminStats = document.getElementById("adminStats");
@@ -91,6 +94,90 @@ function ownerItemCard(item, bookings) {
   return card;
 }
 
+function parseYmd(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function formatMonthTitle(date) {
+  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function buildBookedDaySet(bookings, viewDate) {
+  const bookedDays = new Set();
+  const monthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const monthEnd = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+  bookings.forEach((booking) => {
+    const start = parseYmd(booking.start_date);
+    const end = parseYmd(booking.end_date);
+    const rangeStart = start > monthStart ? start : monthStart;
+    const rangeEnd = end < monthEnd ? end : monthEnd;
+    if (rangeStart > rangeEnd) {
+      return;
+    }
+    let current = rangeStart;
+    while (current <= rangeEnd) {
+      bookedDays.add(current.getDate());
+      current = addDays(current, 1);
+    }
+  });
+  return bookedDays;
+}
+
+function renderCalendar(bookings) {
+  const today = new Date();
+  const viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  calendarTitle.textContent = formatMonthTitle(viewDate);
+  calendarGrid.innerHTML = "";
+
+  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  labels.forEach((label) => {
+    const cell = document.createElement("div");
+    cell.className = "calendar__cell calendar__cell--label";
+    cell.textContent = label;
+    calendarGrid.appendChild(cell);
+  });
+
+  const firstDay = viewDate.getDay();
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const bookedDays = buildBookedDaySet(bookings, viewDate);
+
+  for (let i = 0; i < firstDay; i += 1) {
+    const empty = document.createElement("div");
+    empty.className = "calendar__cell";
+    calendarGrid.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const cell = document.createElement("div");
+    const isBooked = bookedDays.has(day);
+    cell.className = `calendar__cell${isBooked ? " calendar__cell--booked" : ""}`;
+    cell.innerHTML = `
+      <span>${day}</span>
+      ${isBooked ? "<span class='calendar__dot'></span>" : ""}
+    `;
+    calendarGrid.appendChild(cell);
+  }
+
+  const upcoming = bookings
+    .filter((booking) => parseYmd(booking.end_date) >= today)
+    .sort((a, b) => parseYmd(a.start_date) - parseYmd(b.start_date))
+    .slice(0, 6)
+    .map(
+      (booking) =>
+        `<div class="card"><strong>${booking.item_title}</strong><span>${booking.start_date} → ${booking.end_date}</span><span class="hint">${booking.status}</span></div>`
+    )
+    .join("");
+
+  calendarList.innerHTML = upcoming || "<p class='hint'>No upcoming bookings.</p>";
+}
+
 function adminItemCard(item) {
   const card = document.createElement("div");
   card.className = "card";
@@ -155,6 +242,7 @@ async function refreshItems() {
 async function refreshBookings() {
   const { bookings } = await api("/api/bookings/my");
   renderList(bookingList, bookings, bookingCard);
+  return bookings;
 }
 
 async function refreshNotifications() {
@@ -206,7 +294,8 @@ async function openBooking(itemId) {
     body: JSON.stringify({ itemId, startDate, endDate })
   });
   setStatus("Booking request submitted.");
-  await refreshBookings();
+  const bookings = await refreshBookings();
+  renderCalendar(bookings);
 }
 
 async function updateItem(itemId, approved, reason) {
@@ -229,13 +318,17 @@ async function boot() {
   await refreshMe();
   await refreshItems();
   try {
-    await refreshBookings();
+    const bookings = await refreshBookings();
     await refreshNotifications();
     await refreshOwnerDashboard();
+    renderCalendar(bookings);
   } catch (_error) {
     bookingList.innerHTML = "<p class='hint'>Login to see your bookings.</p>";
     notificationList.innerHTML = "<p class='hint'>Login to see notifications.</p>";
     ownerDashboard.innerHTML = "<p class='hint'>Login as an owner to see item history.</p>";
+    calendarTitle.textContent = "Booking calendar";
+    calendarGrid.innerHTML = "";
+    calendarList.innerHTML = "<p class='hint'>Login to see upcoming bookings.</p>";
   }
   await refreshAdmin();
 }

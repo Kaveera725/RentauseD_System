@@ -180,6 +180,65 @@ textarea {
   border-radius: 12px;
 }
 
+.calendar {
+  display: grid;
+  gap: 1rem;
+}
+
+.calendar__header {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.calendar__cell {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 52px;
+  padding: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  background: #fff;
+}
+
+.calendar__cell--label {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  min-height: auto;
+}
+
+.calendar__cell--booked {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: #fff2e8;
+}
+
+.calendar__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.calendar__list {
+  display: grid;
+  gap: 0.5rem;
+}
+
 .owner-bookings {
   list-style: none;
   display: grid;
