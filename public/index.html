@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RentauseD</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <header class="hero">
+      <div class="hero__copy">
+        <p class="eyebrow">RentauseD • Used Items Rental System</p>
+        <h1>Rent what you need. Monetize what you own.</h1>
+        <p class="subtitle">
+          A local, admin-verified marketplace for borrowing power tools, garden
+          gear, and weekend projects.
+        </p>
+        <div class="hero__actions">
+          <button class="btn" id="refreshItems">Refresh listings</button>
+          <button class="btn btn--ghost" id="refreshAdmin">Refresh admin</button>
+        </div>
+        <div class="status" id="statusMessage">Not logged in.</div>
+      </div>
+      <div class="hero__panel">
+        <div class="panel">
+          <h2>Sign in</h2>
+          <form id="loginForm">
+            <input type="email" name="email" placeholder="Email" required />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <button class="btn" type="submit">Login</button>
+          </form>
+          <button class="link" id="logoutBtn">Logout</button>
+        </div>
+        <div class="panel">
+          <h2>Create account</h2>
+          <form id="registerForm">
+            <input type="text" name="name" placeholder="Full name" required />
+            <input type="email" name="email" placeholder="Email" required />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <select name="role">
+              <option value="user">Renter</option>
+              <option value="owner">Owner</option>
+            </select>
+            <button class="btn" type="submit">Register</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <h2>List an item</h2>
+        <form id="itemForm" enctype="multipart/form-data">
+          <input type="text" name="title" placeholder="Item title" required />
+          <textarea
+            name="description"
+            placeholder="Describe the item"
+            required
+          ></textarea>
+          <input
+            type="number"
+            name="pricePerDay"
+            placeholder="Price per day"
+            step="0.01"
+            required
+          />
+          <input type="text" name="category" placeholder="Category" required />
+          <input type="text" name="location" placeholder="Location" required />
+          <input type="file" name="image" accept="image/*" />
+          <button class="btn" type="submit">Submit for approval</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Available listings</h2>
+        <div class="list" id="itemList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Your bookings</h2>
+        <div class="list" id="bookingList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Leave a review</h2>
+        <form id="reviewForm">
+          <input type="number" name="itemId" placeholder="Item ID" required />
+          <input
+            type="number"
+            name="rating"
+            min="1"
+            max="5"
+            placeholder="Rating (1-5)"
+            required
+          />
+          <textarea name="comment" placeholder="Review" required></textarea>
+          <button class="btn" type="submit">Submit review</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Notifications</h2>
+        <div class="list" id="notificationList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Admin queue</h2>
+        <p class="hint">Default admin login: admin@local / admin123</p>
+        <div class="admin-grid">
+          <div>
+            <h3>Pending items</h3>
+            <div class="list" id="adminItems"></div>
+          </div>
+          <div>
+            <h3>Pending bookings</h3>
+            <div class="list" id="adminBookings"></div>
+          </div>
+          <div>
+            <h3>Platform stats</h3>
+            <div class="stats" id="adminStats"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
