@@ -9,6 +9,7 @@ const calendarList = document.getElementById("calendarList");
 const adminItems = document.getElementById("adminItems");
 const adminBookings = document.getElementById("adminBookings");
 const adminStats = document.getElementById("adminStats");
+let currentUser = null;
 
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -226,6 +227,7 @@ function adminBookingCard(booking) {
 
 async function refreshMe() {
   const { user } = await api("/api/me");
+  currentUser = user;
   if (!user) {
     setStatus("Not logged in.");
     return null;
@@ -240,17 +242,29 @@ async function refreshItems() {
 }
 
 async function refreshBookings() {
+  if (!currentUser) {
+    bookingList.innerHTML = "<p class='hint'>Login to see your bookings.</p>";
+    return [];
+  }
   const { bookings } = await api("/api/bookings/my");
   renderList(bookingList, bookings, bookingCard);
   return bookings;
 }
 
 async function refreshNotifications() {
+  if (!currentUser) {
+    notificationList.innerHTML = "<p class='hint'>Login to see notifications.</p>";
+    return;
+  }
   const { notifications } = await api("/api/notifications");
   renderList(notificationList, notifications, notificationCard);
 }
 
 async function refreshOwnerDashboard() {
+  if (!currentUser || currentUser.role !== "owner") {
+    ownerDashboard.innerHTML = "<p class='hint'>Login as an owner to see item history.</p>";
+    return;
+  }
   const { items, bookings } = await api("/api/owner/dashboard");
   const bookingMap = bookings.reduce((map, booking) => {
     if (!map[booking.item_id]) {
@@ -263,6 +277,12 @@ async function refreshOwnerDashboard() {
 }
 
 async function refreshAdmin() {
+  if (!currentUser || currentUser.role !== "admin") {
+    adminItems.innerHTML = "<p class='hint'>Admin access required.</p>";
+    adminBookings.innerHTML = "";
+    adminStats.innerHTML = "";
+    return;
+  }
   try {
     const [items, bookings, stats] = await Promise.all([
       api("/api/admin/items"),
@@ -317,12 +337,12 @@ async function updateBooking(bookingId, approved, reason) {
 async function boot() {
   await refreshMe();
   await refreshItems();
-  try {
+  if (currentUser) {
     const bookings = await refreshBookings();
     await refreshNotifications();
     await refreshOwnerDashboard();
     renderCalendar(bookings);
-  } catch (_error) {
+  } else {
     bookingList.innerHTML = "<p class='hint'>Login to see your bookings.</p>";
     notificationList.innerHTML = "<p class='hint'>Login to see notifications.</p>";
     ownerDashboard.innerHTML = "<p class='hint'>Login as an owner to see item history.</p>";

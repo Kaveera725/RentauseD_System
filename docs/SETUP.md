@@ -15,6 +15,19 @@ npm run start
 
 Open http://localhost:3000 in your browser.
 
+## Email (local SMTP)
+This project is wired for Mailpit by default.
+
+1) Start Mailpit (default SMTP port 1025).
+2) Optionally override settings with env vars using a .env file (see .env.example):
+
+```
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_FROM=no-reply@rentaused.local
+SMTP_ENABLED=true
+```
+
 ## Default Admin
 - Email: admin@local
 - Password: admin123
