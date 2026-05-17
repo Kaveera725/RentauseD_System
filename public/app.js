@@ -2,6 +2,7 @@ const statusMessage = document.getElementById("statusMessage");
 const itemList = document.getElementById("itemList");
 const bookingList = document.getElementById("bookingList");
 const notificationList = document.getElementById("notificationList");
+const ownerDashboard = document.getElementById("ownerDashboard");
 const adminItems = document.getElementById("adminItems");
 const adminBookings = document.getElementById("adminBookings");
 const adminStats = document.getElementById("adminStats");
@@ -64,6 +65,28 @@ function notificationCard(notification) {
   card.innerHTML = `
     <span>${notification.message}</span>
     <span class="hint">${new Date(notification.created_at).toLocaleString()}</span>
+  `;
+  return card;
+}
+
+function ownerItemCard(item, bookings) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const statusLine = item.status === "rejected" && item.rejection_reason
+    ? `Rejected: ${item.rejection_reason}`
+    : `Status: ${item.status}`;
+  const bookingHtml = bookings.length
+    ? bookings
+        .map(
+          (booking) =>
+            `<li>${booking.start_date} → ${booking.end_date} • ${booking.status} • ${booking.renter_name}</li>`
+        )
+        .join("")
+    : "<li class='hint'>No bookings yet.</li>";
+  card.innerHTML = `
+    <strong>${item.title}</strong>
+    <span class="hint">${statusLine}</span>
+    <ul class="owner-bookings">${bookingHtml}</ul>
   `;
   return card;
 }
@@ -139,6 +162,18 @@ async function refreshNotifications() {
   renderList(notificationList, notifications, notificationCard);
 }
 
+async function refreshOwnerDashboard() {
+  const { items, bookings } = await api("/api/owner/dashboard");
+  const bookingMap = bookings.reduce((map, booking) => {
+    if (!map[booking.item_id]) {
+      map[booking.item_id] = [];
+    }
+    map[booking.item_id].push(booking);
+    return map;
+  }, {});
+  renderList(ownerDashboard, items, (item) => ownerItemCard(item, bookingMap[item.id] || []));
+}
+
 async function refreshAdmin() {
   try {
     const [items, bookings, stats] = await Promise.all([
@@ -196,9 +231,11 @@ async function boot() {
   try {
     await refreshBookings();
     await refreshNotifications();
+    await refreshOwnerDashboard();
   } catch (_error) {
     bookingList.innerHTML = "<p class='hint'>Login to see your bookings.</p>";
     notificationList.innerHTML = "<p class='hint'>Login to see notifications.</p>";
+    ownerDashboard.innerHTML = "<p class='hint'>Login as an owner to see item history.</p>";
   }
   await refreshAdmin();
 }

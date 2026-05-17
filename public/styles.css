@@ -180,6 +180,15 @@ textarea {
   border-radius: 12px;
 }
 
+.owner-bookings {
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .hint {
   font-size: 0.85rem;
   color: var(--muted);
